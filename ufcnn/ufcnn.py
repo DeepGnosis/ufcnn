@@ -268,3 +268,91 @@ def construct_ufcnn(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
     biases = H_biases + G_biases + [C_biases]
 
     return x_in, y_hat, weights, biases
+
+
+def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
+                        filter_length=5, random_seed=0):
+    """Construct a Dilated Convolutional Neural Network.
+
+    The important thing in time-series modeling is applying filters in a
+    causal-way, i.e. convolutions must not include values after a current
+    time moment. This is achieved by zero-padding from the left before
+    applying the convolution.
+
+    Implementation is done in tensorflow.
+
+    Parameters
+    ----------
+    n_inputs : int, default 1
+        Number of input time series.
+    n_outputs : int, default 1
+        Number of output time series.
+    n_levels : int, default 1
+        Number of levels in the network.
+    n_filters : int, default 10
+        Number of filters in each convolutional layers (except the last one).
+    filter_length : int, default 5
+        Length of the filters.
+    random_seed : int or None, default 0
+        Random seed to use for weights and biases initialization. None means
+        that the seed will be selected "at random".
+
+    Returns
+    -------
+    x : tensor, shape (batch_size, n_samples, n_inputs)
+        Use it to feed input sequences into the network.
+    y_hat : tensor, shape (batch_size, n_samples, n_outputs)
+        Use it to read-out networks predictions.
+    weights : list of tensors, length 2 * n_levels + 1
+        List of convolution weights, the order is H, G, C.
+    biases : list of tensors, length 2 * n_levels + 1
+        List of convolution biases, the order is H, G, C.
+
+    Notes
+    -----
+    Weights and biases will be initialized with truncated normal random
+    variables with std of 0.1, you can reinitialize them using the returned
+    `weights` and `biases` lists.
+
+    References
+    ----------
+    """
+    H_weights = []
+    H_biases = []
+
+    for level in range(n_levels):
+        if level == 0:
+            H_weights.append(
+                init_conv_weights([1, filter_length, n_inputs, n_filters],
+                                  random_seed))
+        else:
+            H_weights.append(
+                init_conv_weights([1, filter_length, n_filters, n_filters],
+                                  random_seed))
+
+        H_biases.append(init_conv_bias([n_filters]))
+
+    x_in = tf.placeholder(tf.float32, shape=[None, None, n_inputs])
+
+    # Add height dimensions for 2D convolutions.
+    x = tf.expand_dims(x_in, 1)
+    H_outputs = []
+    dilation = 1
+    for w, b in zip(H_weights, H_biases):
+        x = tf.nn.relu(conv(x, w, b, filter_length, dilation))
+        H_outputs.append(x)
+        dilation *= 2
+
+    C_weights = init_conv_weights([1, filter_length, n_filters, n_outputs],
+                                  random_seed)
+    C_biases = init_conv_weights([n_outputs], random_seed)
+
+    y_hat = conv(x, C_weights, C_biases, filter_length, 1)
+    # Remove height dimension.
+    y_hat = tf.squeeze(y_hat, [1])
+
+    weights = H_weights + [C_weights]
+    biases = H_biases + [C_biases]
+
+    return x_in, y_hat, weights, biases
+
