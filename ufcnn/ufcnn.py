@@ -326,9 +326,14 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
                 init_conv_weights([1, filter_length, n_inputs, n_filters],
                                   random_seed))
         else:
-            H_weights.append(
-                init_conv_weights([1, filter_length, n_filters, n_filters],
-                                  random_seed))
+            if skip_connections:
+                H_weights.append(
+                    init_conv_weights([1, filter_length, n_filters * 2, n_filters],
+                                      random_seed))
+            else:
+                H_weights.append(
+                    init_conv_weights([1, filter_length, n_filters, n_filters],
+                                      random_seed))
 
         H_biases.append(init_conv_bias([n_filters]))
 
