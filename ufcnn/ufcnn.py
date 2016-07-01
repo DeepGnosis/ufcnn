@@ -343,7 +343,7 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
     x = tf.expand_dims(x_in, 1)
     H_outputs = []
     dilation = 1
-    x_all = tf.expand_dims(tf.placeholder(tf.float32, shape=[None, None, n_inputs]), 1)
+    level = 0
 
     for w, b in zip(H_weights, H_biases):
         print(tf.shape(x))
@@ -352,8 +352,9 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
         dilation = dilation * 2 if dilated else dilation
 
         if skip_connections:
-            x_all = tf.concat(3, [x, x_all])
+            x_all = x if level == 0 else tf.concat(3, [x, x_all])
             x = x_all
+        level += 1
 
     C_weights = init_conv_weights([1, filter_length, n_filters, n_outputs],
                                   random_seed)
