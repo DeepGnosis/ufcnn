@@ -271,7 +271,7 @@ def construct_ufcnn(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
 
 
 def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
-                        filter_length=5, random_seed=0):
+                        filter_length=5, random_seed=0, dilated=True):
     """Construct a Dilated Convolutional Neural Network.
 
     The important thing in time-series modeling is applying filters in a
@@ -341,7 +341,7 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
     for w, b in zip(H_weights, H_biases):
         x = tf.nn.relu(conv(x, w, b, filter_length, dilation))
         H_outputs.append(x)
-        dilation *= 2
+        dilation = dilation * 2 if dilated else dilation
 
     C_weights = init_conv_weights([1, filter_length, n_filters, n_outputs],
                                   random_seed)
