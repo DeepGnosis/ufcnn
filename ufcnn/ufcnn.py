@@ -351,7 +351,7 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
         H_outputs.append(x)
         dilation = dilation * 2 if dilated else dilation
 
-        if skip_connections:
+        if skip_connections and level < n_levels - 1:
             x_all = x if level == 0 else tf.concat(3, [x, x_all])
             x = x_all
         level += 1
