@@ -296,6 +296,12 @@ def construct_dilated(n_inputs=1, n_outputs=1, n_levels=1, n_filters=10,
     random_seed : int or None, default 0
         Random seed to use for weights and biases initialization. None means
         that the seed will be selected "at random".
+    dilated : bool or None, default True
+        If True, use dilated convolution. If False use simple convolution.
+    skip_connections : bool or None, default False
+        If True, create 'skip connections'.
+        Let's have N layers in convolutional block,
+        then skip connections will be created for each layer n from layer n to layers (n+2,... N).
 
     Returns
     -------
